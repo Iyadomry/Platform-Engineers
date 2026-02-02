@@ -1,0 +1,809 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Earnix Platform Story Points Calculator</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=DM+Sans:ital,opsz,wght@0,9..40,300;0,9..40,500;0,9..40,700;1,9..40,400&family=Sora:wght@700;800&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg: #0c0f1a;
+    --surface: #151929;
+    --surface-hover: #1c2238;
+    --border: #252d45;
+    --accent: #f59e0b;
+    --accent-glow: rgba(245, 158, 11, 0.25);
+    --accent-dim: #b27308;
+    --text: #e2e8f0;
+    --text-muted: #8892b0;
+    --text-dim: #5a6380;
+    --white: #ffffff;
+    --green: #10b981;
+    --red: #ef4444;
+    --radius: 14px;
+    --radius-sm: 10px;
+  }
+
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  body {
+    font-family: 'DM Sans', sans-serif;
+    background: var(--bg);
+    color: var(--text);
+    min-height: 100vh;
+    overflow-x: hidden;
+    line-height: 1.6;
+  }
+
+  body::before {
+    content: '';
+    position: fixed;
+    inset: 0;
+    background-image:
+      radial-gradient(circle at 20% 30%, rgba(245, 158, 11, 0.04) 0%, transparent 50%),
+      radial-gradient(circle at 80% 70%, rgba(59, 130, 246, 0.03) 0%, transparent 50%),
+      linear-gradient(rgba(37, 45, 69, 0.3) 1px, transparent 1px),
+      linear-gradient(90deg, rgba(37, 45, 69, 0.3) 1px, transparent 1px);
+    background-size: 100% 100%, 100% 100%, 60px 60px, 60px 60px;
+    z-index: 0;
+    pointer-events: none;
+  }
+
+  /* ---- NAV ---- */
+  nav {
+    position: sticky;
+    top: 0;
+    z-index: 100;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 16px 32px;
+    background: rgba(12, 15, 26, 0.85);
+    backdrop-filter: blur(18px);
+    border-bottom: 1px solid var(--border);
+  }
+
+  .logo {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    font-family: 'Sora', sans-serif;
+    font-weight: 800;
+    font-size: 1.25rem;
+    color: var(--white);
+    text-decoration: none;
+  }
+
+  .logo-badge {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 38px;
+    height: 38px;
+    background: linear-gradient(135deg, var(--accent), #d97706);
+    border-radius: var(--radius-sm);
+    font-family: 'Sora', sans-serif;
+    font-weight: 800;
+    font-size: 1rem;
+    color: var(--bg);
+    box-shadow: 0 0 20px var(--accent-glow);
+  }
+
+  .nav-links {
+    display: flex;
+    gap: 8px;
+  }
+
+  .nav-links a {
+    color: var(--text-muted);
+    text-decoration: none;
+    padding: 8px 16px;
+    border-radius: var(--radius-sm);
+    font-size: 0.9rem;
+    font-weight: 500;
+    transition: all 0.2s;
+  }
+
+  .nav-links a:hover, .nav-links a.active {
+    color: var(--white);
+    background: var(--surface);
+  }
+
+  /* ---- HERO ---- */
+  .hero {
+    position: relative;
+    z-index: 1;
+    text-align: center;
+    padding: 64px 24px 40px;
+  }
+
+  .hero h1 {
+    font-family: 'Sora', sans-serif;
+    font-weight: 800;
+    font-size: clamp(2rem, 5vw, 3.2rem);
+    color: var(--white);
+    margin-bottom: 12px;
+    letter-spacing: -0.5px;
+  }
+
+  .hero h1 span {
+    background: linear-gradient(135deg, var(--accent), #fbbf24);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+  }
+
+  .hero p {
+    color: var(--text-muted);
+    font-size: 1.1rem;
+    max-width: 540px;
+    margin: 0 auto;
+  }
+
+  .hero p strong {
+    color: var(--text);
+  }
+
+  /* ---- CALCULATOR CARD ---- */
+  .card-wrapper {
+    position: relative;
+    z-index: 1;
+    max-width: 560px;
+    margin: 0 auto 40px;
+    padding: 0 20px;
+  }
+
+  .card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: 36px 32px 32px;
+    box-shadow: 0 20px 60px rgba(0,0,0,0.35);
+  }
+
+  .card h2 {
+    font-family: 'Sora', sans-serif;
+    font-size: 1.35rem;
+    font-weight: 700;
+    color: var(--white);
+    margin-bottom: 28px;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+  }
+
+  .card h2::before {
+    content: '🧮';
+    font-size: 1.3rem;
+  }
+
+  /* ---- FORM FIELDS ---- */
+  .form-group {
+    margin-bottom: 22px;
+  }
+
+  .form-group label {
+    display: block;
+    font-size: 0.85rem;
+    font-weight: 500;
+    color: var(--text-muted);
+    margin-bottom: 8px;
+    letter-spacing: 0.3px;
+  }
+
+  .select-wrap {
+    position: relative;
+  }
+
+  .select-wrap::after {
+    content: '▾';
+    position: absolute;
+    right: 16px;
+    top: 50%;
+    transform: translateY(-50%);
+    color: var(--text-dim);
+    pointer-events: none;
+    font-size: 0.9rem;
+  }
+
+  select, input[type="number"] {
+    width: 100%;
+    padding: 13px 16px;
+    background: var(--bg);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-sm);
+    color: var(--text);
+    font-family: 'DM Sans', sans-serif;
+    font-size: 0.95rem;
+    appearance: none;
+    -webkit-appearance: none;
+    outline: none;
+    transition: border-color 0.2s, box-shadow 0.2s;
+  }
+
+  select:focus, input[type="number"]:focus {
+    border-color: var(--accent);
+    box-shadow: 0 0 0 3px var(--accent-glow);
+  }
+
+  select option {
+    background: var(--bg);
+    color: var(--text);
+  }
+
+  input[type="number"]::-webkit-inner-spin-button,
+  input[type="number"]::-webkit-outer-spin-button {
+    opacity: 1;
+  }
+
+  .row {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 16px;
+  }
+
+  .section-label {
+    font-family: 'Sora', sans-serif;
+    font-size: 0.75rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 1.5px;
+    color: var(--accent);
+    margin-bottom: 16px;
+    margin-top: 8px;
+  }
+
+  .divider {
+    border: none;
+    border-top: 1px solid var(--border);
+    margin: 24px 0;
+  }
+
+  /* ---- BUTTONS ---- */
+  .btn-row {
+    display: flex;
+    gap: 12px;
+    margin-top: 28px;
+  }
+
+  .btn {
+    flex: 1;
+    padding: 14px 20px;
+    border: none;
+    border-radius: var(--radius-sm);
+    font-family: 'DM Sans', sans-serif;
+    font-weight: 700;
+    font-size: 0.95rem;
+    cursor: pointer;
+    transition: all 0.25s;
+    letter-spacing: 0.2px;
+  }
+
+  .btn-primary {
+    background: linear-gradient(135deg, var(--accent), #d97706);
+    color: var(--bg);
+    box-shadow: 0 4px 20px var(--accent-glow);
+  }
+
+  .btn-primary:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 8px 30px var(--accent-glow);
+  }
+
+  .btn-primary:active {
+    transform: translateY(0);
+  }
+
+  .btn-secondary {
+    background: var(--bg);
+    color: var(--text-muted);
+    border: 1px solid var(--border);
+  }
+
+  .btn-secondary:hover {
+    background: var(--surface-hover);
+    color: var(--text);
+  }
+
+  /* ---- RESULT ---- */
+  .result-panel {
+    margin-top: 28px;
+    text-align: center;
+    padding: 32px 20px;
+    border-radius: var(--radius);
+    background: linear-gradient(135deg, rgba(245, 158, 11, 0.06), rgba(245, 158, 11, 0.02));
+    border: 1px solid rgba(245, 158, 11, 0.15);
+    display: none;
+    animation: resultReveal 0.5s cubic-bezier(0.34, 1.56, 0.64, 1);
+  }
+
+  .result-panel.visible {
+    display: block;
+  }
+
+  @keyframes resultReveal {
+    from { opacity: 0; transform: scale(0.92) translateY(10px); }
+    to { opacity: 1; transform: scale(1) translateY(0); }
+  }
+
+  .result-number {
+    font-family: 'Sora', sans-serif;
+    font-weight: 800;
+    font-size: 5rem;
+    line-height: 1;
+    background: linear-gradient(135deg, var(--accent), #fbbf24);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+    margin-bottom: 4px;
+    filter: drop-shadow(0 0 30px var(--accent-glow));
+  }
+
+  .result-label {
+    font-size: 1rem;
+    color: var(--text-muted);
+    font-weight: 500;
+  }
+
+  .result-badge {
+    display: inline-block;
+    margin-top: 14px;
+    padding: 6px 16px;
+    border-radius: 100px;
+    font-size: 0.8rem;
+    font-weight: 700;
+    letter-spacing: 0.5px;
+  }
+
+  .result-raw {
+    margin-top: 12px;
+    font-size: 0.82rem;
+    color: var(--text-dim);
+  }
+
+  /* ---- FIBONACCI SCALE BAR ---- */
+  .scale-bar {
+    margin-top: 20px;
+    padding: 16px 0 0;
+  }
+
+  .scale-bar-label {
+    font-size: 0.75rem;
+    color: var(--text-dim);
+    margin-bottom: 10px;
+    text-align: center;
+  }
+
+  .scale-pips {
+    display: flex;
+    justify-content: center;
+    gap: 8px;
+    flex-wrap: wrap;
+  }
+
+  .pip {
+    width: 52px;
+    height: 44px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 10px;
+    font-size: 0.95rem;
+    font-weight: 700;
+    color: var(--text-dim);
+    background: var(--bg);
+    border: 1px solid var(--border);
+    transition: all 0.35s cubic-bezier(0.34, 1.56, 0.64, 1);
+  }
+
+  .pip.active {
+    background: linear-gradient(135deg, var(--accent), #d97706);
+    color: var(--bg);
+    border-color: var(--accent);
+    box-shadow: 0 0 18px var(--accent-glow);
+    transform: scale(1.2);
+  }
+
+  /* ---- BREAKDOWN TABLE ---- */
+  .breakdown {
+    margin-top: 18px;
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 0.82rem;
+    text-align: left;
+  }
+
+  .breakdown th {
+    color: var(--text-dim);
+    font-weight: 500;
+    padding: 6px 10px;
+    border-bottom: 1px solid var(--border);
+  }
+
+  .breakdown td {
+    padding: 6px 10px;
+    color: var(--text-muted);
+    border-bottom: 1px solid rgba(37, 45, 69, 0.4);
+  }
+
+  .breakdown tr:last-child td {
+    border-bottom: none;
+    font-weight: 700;
+    color: var(--accent);
+  }
+
+  /* ---- TIPS SECTION ---- */
+  .tips {
+    position: relative;
+    z-index: 1;
+    max-width: 560px;
+    margin: 0 auto 40px;
+    padding: 0 20px;
+  }
+
+  .tip-card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: 24px 28px;
+  }
+
+  .tip-card p {
+    color: var(--text-muted);
+    font-size: 0.9rem;
+    line-height: 1.7;
+  }
+
+  .tip-card p strong {
+    color: var(--text);
+  }
+
+  .tip-card p + p {
+    margin-top: 12px;
+  }
+
+  .tip-icon {
+    font-size: 1.1rem;
+    margin-right: 6px;
+  }
+
+  .tip-card a {
+    color: var(--accent);
+    text-decoration: none;
+  }
+
+  .tip-card a:hover {
+    text-decoration: underline;
+  }
+
+  /* ---- FOOTER ---- */
+  footer {
+    position: relative;
+    z-index: 1;
+    text-align: center;
+    padding: 24px;
+    border-top: 1px solid var(--border);
+    color: var(--text-dim);
+    font-size: 0.82rem;
+  }
+
+  footer a {
+    color: var(--text-muted);
+    text-decoration: none;
+    transition: color 0.2s;
+  }
+
+  footer a:hover {
+    color: var(--accent);
+  }
+
+  /* ---- CONFETTI ---- */
+  .confetti-container {
+    position: fixed;
+    inset: 0;
+    pointer-events: none;
+    z-index: 9999;
+    overflow: hidden;
+  }
+
+  .confetti-piece {
+    position: absolute;
+    top: -20px;
+    animation: confettiFall linear forwards;
+  }
+
+  @keyframes confettiFall {
+    0% { transform: translateY(0) rotate(0deg); opacity: 1; }
+    80% { opacity: 1; }
+    100% { transform: translateY(100vh) rotate(720deg); opacity: 0; }
+  }
+
+  @keyframes shake {
+    0%, 100% { transform: translateX(0); }
+    20% { transform: translateX(-6px); }
+    40% { transform: translateX(6px); }
+    60% { transform: translateX(-4px); }
+    80% { transform: translateX(4px); }
+  }
+
+  /* ---- RESPONSIVE ---- */
+  @media (max-width: 600px) {
+    nav { padding: 14px 18px; }
+    .nav-links a { padding: 6px 10px; font-size: 0.82rem; }
+    .hero { padding: 48px 18px 32px; }
+    .card { padding: 28px 20px 24px; }
+    .row { grid-template-columns: 1fr; gap: 0; }
+    .result-number { font-size: 4rem; }
+    .pip { width: 44px; height: 38px; font-size: 0.85rem; }
+  }
+</style>
+</head>
+<body>
+
+<!-- NAV -->
+<nav>
+  <a href="#" class="logo">
+    <span class="logo-badge">EP</span>
+    Earnix Platform
+  </a>
+  <div class="nav-links">
+    <span class="active" style="color: var(--white); padding: 8px 16px; font-size: 0.9rem; font-weight: 500;">Story Points Calculator</span>
+  </div>
+</nav>
+
+<!-- HERO -->
+<section class="hero">
+  <h1><span>Earnix Platform</span> Story Points Calculator</h1>
+  <p>Fibonacci-based estimation for a single User Story. Scale: <strong>1, 2, 3, 5, 8</strong></p>
+</section>
+
+<!-- CALCULATOR -->
+<div class="card-wrapper">
+  <div class="card">
+    <h2>Story Points Calculator</h2>
+
+    <div class="section-label">Development</div>
+
+    <div class="row">
+      <div class="form-group">
+        <label>Development Complexity</label>
+        <div class="select-wrap">
+          <select id="devComplexity">
+            <option value="" disabled selected>Choose…</option>
+            <option value="1">Low</option>
+            <option value="2">Medium</option>
+            <option value="3">High</option>
+          </select>
+        </div>
+      </div>
+      <div class="form-group">
+        <label>Dev Duration (days)</label>
+        <input type="number" id="devDays" min="0.5" max="100" step="0.5" placeholder="e.g. 3">
+      </div>
+    </div>
+
+    <hr class="divider">
+    <div class="section-label">Testing</div>
+
+    <div class="row">
+      <div class="form-group">
+        <label>Testing Complexity</label>
+        <div class="select-wrap">
+          <select id="testComplexity">
+            <option value="" disabled selected>Choose…</option>
+            <option value="1">Low</option>
+            <option value="2">Medium</option>
+            <option value="3">High</option>
+          </select>
+        </div>
+      </div>
+      <div class="form-group">
+        <label>Test Duration (days)</label>
+        <input type="number" id="testDays" min="0.5" max="100" step="0.5" placeholder="e.g. 2">
+      </div>
+    </div>
+
+    <!-- BUTTONS -->
+    <div class="btn-row">
+      <button class="btn btn-primary" id="calcBtn">Calculate Story Points</button>
+      <button class="btn btn-secondary" id="resetBtn">Reset</button>
+    </div>
+
+    <!-- RESULT -->
+    <div class="result-panel" id="resultPanel">
+      <div class="result-number" id="resultNumber">—</div>
+      <div class="result-label">story points</div>
+      <div class="result-badge" id="resultBadge">FIBONACCI ✓</div>
+      <div class="result-raw" id="resultRaw"></div>
+
+      <!-- Breakdown table -->
+      <table class="breakdown" id="breakdownTable">
+        <tr>
+          <th>Component</th>
+          <th>Weight</th>
+          <th>Days</th>
+          <th>Score</th>
+        </tr>
+        <tr>
+          <td>Development</td>
+          <td id="bDevW">—</td>
+          <td id="bDevD">—</td>
+          <td id="bDevS">—</td>
+        </tr>
+        <tr>
+          <td>Testing</td>
+          <td id="bTestW">—</td>
+          <td id="bTestD">—</td>
+          <td id="bTestS">—</td>
+        </tr>
+        <tr>
+          <td><strong>Total (raw → Fibonacci)</strong></td>
+          <td></td>
+          <td></td>
+          <td id="bTotal">—</td>
+        </tr>
+      </table>
+
+      <div class="scale-bar">
+        <div class="scale-bar-label">Fibonacci scale: 1, 2, 3, 5, 8</div>
+        <div class="scale-pips" id="scalePips">
+          <div class="pip" data-val="1">1</div>
+          <div class="pip" data-val="2">2</div>
+          <div class="pip" data-val="3">3</div>
+          <div class="pip" data-val="5">5</div>
+          <div class="pip" data-val="8">8</div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- EXPLANATION -->
+<section class="tips">
+  <div class="tip-card">
+    <p><span class="tip-icon">📐</span> <strong>How it works:</strong> Each complexity level is assigned a weight — Low = 1, Medium = 2, High = 3. The weight is multiplied by the estimated duration in days for both development and testing. The two scores are summed, then rounded to the nearest Fibonacci number on the <strong>1, 2, 3, 5, 8</strong> scale.</p>
+    <p><span class="tip-icon">💡</span> <strong>Formula:</strong> (Dev Complexity × Dev Days) + (Test Complexity × Test Days) → nearest Fibonacci from {1, 2, 3, 5, 8}. If the raw score exceeds 8, it caps at 8 — consider splitting the story.</p>
+  </div>
+</section>
+
+<!-- FOOTER -->
+<footer>
+  Earnix Platform Story Points Calculator © 2025
+</footer>
+
+<!-- CONFETTI CONTAINER -->
+<div class="confetti-container" id="confettiContainer"></div>
+
+<script>
+  const FIBONACCI = [1, 2, 3, 5, 8];
+
+  function nearestFib(raw) {
+    if (raw <= 0.5) return 1;
+    let closest = FIBONACCI[0];
+    let minDist = Infinity;
+    for (const f of FIBONACCI) {
+      const dist = Math.abs(raw - f);
+      if (dist < minDist) {
+        minDist = dist;
+        closest = f;
+      }
+    }
+    return closest;
+  }
+
+  const calcBtn     = document.getElementById('calcBtn');
+  const resetBtn    = document.getElementById('resetBtn');
+  const resultPanel = document.getElementById('resultPanel');
+  const resultNum   = document.getElementById('resultNumber');
+  const resultRaw   = document.getElementById('resultRaw');
+  const resultBadge = document.getElementById('resultBadge');
+  const confettiEl  = document.getElementById('confettiContainer');
+
+  calcBtn.addEventListener('click', () => {
+    const dcVal = document.getElementById('devComplexity').value;
+    const ddVal = parseFloat(document.getElementById('devDays').value);
+    const tcVal = document.getElementById('testComplexity').value;
+    const tdVal = parseFloat(document.getElementById('testDays').value);
+
+    if (!dcVal || !ddVal || !tcVal || !tdVal || isNaN(ddVal) || isNaN(tdVal)) {
+      calcBtn.style.animation = 'none';
+      void calcBtn.offsetHeight;
+      calcBtn.style.animation = 'shake 0.4s ease';
+      return;
+    }
+
+    const dc = parseInt(dcVal);
+    const tc = parseInt(tcVal);
+
+    const devScore  = dc * ddVal;
+    const testScore = tc * tdVal;
+    const rawTotal  = devScore + testScore;
+    const fibResult = nearestFib(rawTotal);
+
+    // Update breakdown
+    document.getElementById('bDevW').textContent  = dc;
+    document.getElementById('bDevD').textContent   = ddVal;
+    document.getElementById('bDevS').textContent   = devScore.toFixed(1);
+    document.getElementById('bTestW').textContent  = tc;
+    document.getElementById('bTestD').textContent   = tdVal;
+    document.getElementById('bTestS').textContent   = testScore.toFixed(1);
+    document.getElementById('bTotal').textContent   = rawTotal.toFixed(1) + ' → ' + fibResult;
+
+    // Result
+    resultNum.textContent = fibResult;
+    resultRaw.textContent = 'Raw score: ' + rawTotal.toFixed(1) + ' → rounded to nearest Fibonacci';
+
+    if (rawTotal > 10) {
+      resultBadge.textContent = 'CAPPED AT 8 — CONSIDER SPLITTING ⚠️';
+      resultBadge.style.background = 'rgba(239, 68, 68, 0.12)';
+      resultBadge.style.color = '#ef4444';
+      resultBadge.style.borderColor = 'rgba(239, 68, 68, 0.25)';
+    } else {
+      resultBadge.textContent = 'FIBONACCI ✓';
+      resultBadge.style.background = 'rgba(16, 185, 129, 0.12)';
+      resultBadge.style.color = '#10b981';
+      resultBadge.style.borderColor = 'rgba(16, 185, 129, 0.25)';
+    }
+
+    // Show panel with animation
+    resultPanel.classList.remove('visible');
+    void resultPanel.offsetHeight;
+    resultPanel.classList.add('visible');
+
+    // Highlight active pip
+    document.querySelectorAll('.pip').forEach(p => p.classList.remove('active'));
+    const activePip = document.querySelector(`.pip[data-val="${fibResult}"]`);
+    if (activePip) activePip.classList.add('active');
+
+    launchConfetti();
+  });
+
+  resetBtn.addEventListener('click', () => {
+    document.getElementById('devComplexity').selectedIndex = 0;
+    document.getElementById('devDays').value = '';
+    document.getElementById('testComplexity').selectedIndex = 0;
+    document.getElementById('testDays').value = '';
+    resultPanel.classList.remove('visible');
+    document.querySelectorAll('.pip').forEach(p => p.classList.remove('active'));
+  });
+
+  // Confetti
+  function launchConfetti() {
+    confettiEl.innerHTML = '';
+    const colors = ['#f59e0b', '#fbbf24', '#d97706', '#10b981', '#3b82f6', '#ef4444', '#8b5cf6', '#ec4899'];
+    for (let i = 0; i < 50; i++) {
+      const piece = document.createElement('div');
+      piece.className = 'confetti-piece';
+      const color = colors[Math.floor(Math.random() * colors.length)];
+      const isCircle = Math.random() > 0.5;
+      const size = 6 + Math.random() * 8;
+      piece.style.cssText = `
+        left: ${Math.random() * 100}%;
+        width: ${size}px;
+        height: ${size}px;
+        background: ${color};
+        border-radius: ${isCircle ? '50%' : '2px'};
+        animation-duration: ${1.5 + Math.random() * 2}s;
+        animation-delay: ${Math.random() * 0.5}s;
+      `;
+      confettiEl.appendChild(piece);
+    }
+    setTimeout(() => { confettiEl.innerHTML = ''; }, 4000);
+  }
+
+  // Smooth scroll
+  document.querySelectorAll('a[href^="#"]').forEach(a => {
+    a.addEventListener('click', e => {
+      const href = a.getAttribute('href');
+      if (href === '#') return;
+      const target = document.querySelector(href);
+      if (target) {
+        e.preventDefault();
+        target.scrollIntoView({ behavior: 'smooth', block: 'start' });
+      }
+    });
+  });
+</script>
+</body>
+</html>
